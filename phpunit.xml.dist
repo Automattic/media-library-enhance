@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<phpunit
+	bootstrap="tests/bootstrap.php"
+	backupGlobals="false"
+	colors="true"
+	convertErrorsToExceptions="true"
+	convertNoticesToExceptions="true"
+	convertWarningsToExceptions="true"
+>
+	<testsuites>
+		<testsuite name="search">
+			<directory suffix="Test.php">./tests/search</directory>
+		</testsuite>
+		<testsuite name="taxonomies">
+			<directory suffix="Test.php">./tests/taxonomies</directory>
+		</testsuite>
+		<testsuite name="replacement">
+			<directory suffix="Test.php">./tests/replacement</directory>
+		</testsuite>
+		<testsuite name="duplicates">
+			<directory suffix="Test.php">./tests/duplicates</directory>
+		</testsuite>
+	</testsuites>
+</phpunit>

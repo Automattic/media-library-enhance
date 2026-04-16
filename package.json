@@ -1,0 +1,26 @@
+{
+	"name": "media-library-enhance",
+	"private": true,
+	"description": "Enterprise-grade media library improvements for WordPress VIP.",
+	"scripts": {
+		"wp-env:start": "wp-env start",
+		"wp-env:stop": "wp-env stop",
+		"wp-env:cli": "wp-env run cli",
+		"vip:create": "vip dev-env create --elasticsearch --app-code=. --slug=mle-dev",
+		"vip:start": "vip dev-env start --slug=mle-dev",
+		"vip:stop": "vip dev-env stop --slug=mle-dev",
+		"vip:index": "vip dev-env exec --slug=mle-dev -- wp vip-search index --setup",
+		"vip:cli": "vip dev-env exec --slug=mle-dev -- wp",
+		"lint:php": "composer lint",
+		"lint:php:fix": "composer lint:fix",
+		"test:unit": "wp-env run tests-cli --env-cwd=wp-content/plugins/feat-planningbackgroundmd-scaffold-wordpress-6us -- bash -c 'WP_TESTS_DIR=/wordpress-phpunit vendor/bin/phpunit'",
+		"test:e2e": "playwright test",
+		"test:e2e:ui": "playwright test --ui",
+		"test": "npm run test:unit && npm run test:e2e"
+	},
+	"devDependencies": {
+		"@wordpress/env": "^10.0.0",
+		"@wordpress/e2e-test-utils-playwright": "^1.44.0",
+		"@playwright/test": "^1.50.0"
+	}
+}

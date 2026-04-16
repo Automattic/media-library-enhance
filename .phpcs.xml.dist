@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<ruleset name="Media Library Enhance">
+	<description>Coding standards for Media Library Enhance plugin.</description>
+
+	<file>.</file>
+
+	<exclude-pattern>vendor/*</exclude-pattern>
+	<exclude-pattern>node_modules/*</exclude-pattern>
+	<exclude-pattern>tests/*</exclude-pattern>
+
+	<!-- VIP Go coding standards (includes WordPress-Core, WordPress-Extra, etc.) -->
+	<rule ref="WordPress-VIP-Go"/>
+
+	<!-- PHP 8.1+ compatibility -->
+	<config name="testVersion" value="8.1-"/>
+	<rule ref="PHPCompatibilityWP"/>
+
+	<!-- Minimum supported WordPress version -->
+	<config name="minimum_wp_version" value="7.0"/>
+
+	<rule ref="WordPress.WP.I18n">
+		<properties>
+			<property name="text_domain" type="array">
+				<element value="media-library-enhance"/>
+			</property>
+		</properties>
+	</rule>
+
+	<!-- Allow short array syntax (PHP 8.1+ baseline) -->
+	<rule ref="Generic.Arrays.DisallowShortArraySyntax">
+		<severity>0</severity>
+	</rule>
+</ruleset>
