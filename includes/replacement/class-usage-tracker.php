@@ -156,9 +156,9 @@ class Usage_Tracker {
 		global $wpdb;
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-		$results = $wpdb->get_col(
+		$rows = $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT post_id
+				"SELECT post_id, meta_value
 				FROM {$wpdb->postmeta}
 				WHERE meta_key = %s
 				AND meta_value LIKE %s",
@@ -167,7 +167,15 @@ class Usage_Tracker {
 			)
 		);
 
-		return array_map( 'intval', $results );
+		$results = [];
+		foreach ( $rows as $row ) {
+			$used_in_posts = maybe_unserialize( $row->meta_value );
+			if ( is_array( $used_in_posts ) && in_array( $post_id, wp_parse_id_list( $used_in_posts ), true ) ) {
+				$results[] = (int) $row->post_id;
+			}
+		}
+
+		return $results;
 	}
 
 	/**

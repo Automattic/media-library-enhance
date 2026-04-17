@@ -62,6 +62,8 @@ class Elasticsearch_Query {
 		$query->set( 'es', true ); // phpcs:ignore WordPressVIPMinimum.Hooks.PreGetPosts.PreGetPosts
 
 		// Keep found_rows enabled because REST_Search exposes pagination totals.
+		// This keeps MySQL fallback queries accurate at the cost of found_rows work.
+		// On ES-routed queries, totals come from the search backend instead.
 		$query->set( 'no_found_rows', false ); // phpcs:ignore WordPressVIPMinimum.Hooks.PreGetPosts.PreGetPosts
 
 		/**
