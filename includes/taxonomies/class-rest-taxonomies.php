@@ -2,9 +2,8 @@
 /**
  * REST API Taxonomy Extensions.
  *
- * Extends the wp/v2/media endpoint to support filtering by media_category
- * and media_tag, and adds a bulk-assign endpoint for efficient taxonomy
- * management on large libraries.
+ * Adds a bulk-assign endpoint for efficient `media_tag` management on
+ * large libraries.
  *
  * @package MediaLibraryEnhance\Taxonomies
  */
@@ -51,7 +50,6 @@ class REST_Taxonomies {
 						'type'        => 'string',
 						'required'    => true,
 						'enum'        => [
-							Media_Taxonomies::CATEGORY_TAXONOMY,
 							Media_Taxonomies::TAG_TAXONOMY,
 						],
 					],

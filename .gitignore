@@ -3,6 +3,9 @@ node_modules/
 vendor/
 package-lock.json
 
+# Build output
+build/
+
 # PHP
 .phpunit.result.cache
 .phpcs.cache

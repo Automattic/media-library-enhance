@@ -4,9 +4,10 @@ Two-week sprint (April 22 – May 6, 2026) proving enterprise media library impr
 
 ## Why decisions were made
 
-- **Backend-first, API-first.** WordPress Core is replacing the entire Backbone.js media modal with React/DataViews (Phase 3). Any modal customization is throwaway. Everything here must survive that transition.
+- **Backend + Gutenberg block-editor extensions, not the Backbone modal.** WordPress Core is replacing the entire Backbone.js `wp.media` modal with React/DataViews (Phase 3). Avoid that layer entirely. Block-editor extensions (InspectorControls, BlockControls, data store subscribers) are already React and compound with Phase 3, not evaporate.
 - **VIP Enterprise Search, not a custom ES client.** Uses the `es` query var and `VIP_ENABLE_VIP_SEARCH` constant to opt queries into the platform's existing Elasticsearch. The integration is a WP_Query interceptor, not a separate search layer.
-- **Taxonomies, not filesystem folders.** Community consensus from Trac #47839. One image can live in multiple categories. DataViews already supports taxonomy filtering. No files move on disk.
+- **Tags only, not categories or folders.** Simpler mental model for editors, matches the tag-as-you-go workflow in the post editor. One flat taxonomy (`media_tag`) on `attachment`. No hierarchical categories.
+- **Editor-surfaced UX over admin pages.** Editors live in the post editor. Tags, duplicate warnings, and image replacement all surface in Gutenberg. The only admin page is the read-only Tools → Media Library Enhance status dashboard.
 - **Postmeta for usage tracking.** `_mle_used_in_posts` is the fastest approach to validate. A future iteration should use a dedicated relationships table (Trac #14513) for scale.
 - **Average hash (aHash) for perceptual duplicate detection.** Uses GD only — no external dependencies. Good enough for obvious duplicates. dHash/pHash are future improvements if precision matters.
 
@@ -16,12 +17,14 @@ Two-week sprint (April 22 – May 6, 2026) proving enterprise media library impr
 - **`SQL_CALC_FOUND_ROWS`** is the root cause of slow media queries at scale. WordPress uses it by default. The search module disables it for attachment queries.
 - **`es-admin` and `es-wp-query` plugins conflict** with our ES routing on VIP. They must be disabled if present. Document this if onboarding a new test site.
 - **The `pre_get_posts` hook modifies non-main queries intentionally.** The PHPCS warning is suppressed inline — don't remove those suppressions.
+- **`build/` is gitignored.** Run `npm run build` before tagging a release. CI should also run it.
 
 ## Local development
 
 Two environments because Elasticsearch can't run in wp-env:
 
 - **`npm run wp-env:start`** — fast iteration, no ES, MySQL fallback. Admin: `localhost:8888` (admin/password).
+- **`npm run start`** — watch-mode JS rebuilds during development (runs `wp-scripts start`).
 - **VIP dev-env** — full stack with Elasticsearch. Requires VIP-CLI + Docker. Run `npm run vip:create` once, then `npm run vip:start`, then `npm run vip:index` to build the ES index. See `vip-config/vip-config.php` for the ES constants.
 
 ## Testing
@@ -32,4 +35,4 @@ Two environments because Elasticsearch can't run in wp-env:
 
 ## Background
 
-See `planning/background.md` for customer pain points, prior art, Core ticket references, and the gap analysis between Phase 3 and enterprise needs.
+See `planning/BACKGROUND.md` for customer pain points, prior art, Core ticket references, and the gap analysis between Phase 3 and enterprise needs.

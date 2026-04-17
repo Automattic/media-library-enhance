@@ -3,6 +3,8 @@
 	"private": true,
 	"description": "Enterprise-grade media library improvements for WordPress VIP.",
 	"scripts": {
+		"build": "wp-scripts build",
+		"start": "wp-scripts start",
 		"wp-env:start": "wp-env start",
 		"wp-env:stop": "wp-env stop",
 		"wp-env:cli": "wp-env run cli",
@@ -19,8 +21,9 @@
 		"test": "npm run test:unit && npm run test:e2e"
 	},
 	"devDependencies": {
-		"@wordpress/env": "^10.0.0",
+		"@playwright/test": "^1.50.0",
 		"@wordpress/e2e-test-utils-playwright": "^1.44.0",
-		"@playwright/test": "^1.50.0"
+		"@wordpress/env": "^10.0.0",
+		"@wordpress/scripts": "^30.0.0"
 	}
 }

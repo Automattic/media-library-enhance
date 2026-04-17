@@ -8,12 +8,15 @@
  * @package MediaLibraryEnhance\Dev
  */
 
-// One-time dev environment setup: pretty permalinks and seed taxonomies.
+// One-time dev environment setup: pretty permalinks and seed media tags.
 // E2E tests require pretty permalinks for /wp-json/ to resolve.
+//
+// The option key is versioned so existing dev environments re-seed when
+// the seed list changes (e.g. when media_category was dropped).
 add_action(
 	'init',
 	function () {
-		if ( get_option( 'mle_dev_seeded' ) ) {
+		if ( get_option( 'mle_dev_seeded_v2' ) ) {
 			return;
 		}
 
@@ -22,13 +25,6 @@ add_action(
 		$wp_rewrite->set_permalink_structure( '/%postname%/' );
 		$wp_rewrite->flush_rules( true );
 
-		$categories = [ 'Photos', 'Logos', 'Documents', 'Videos', 'Infographics' ];
-		foreach ( $categories as $name ) {
-			if ( ! term_exists( $name, 'media_category' ) ) {
-				wp_insert_term( $name, 'media_category' );
-			}
-		}
-
 		$tags = [ 'hero-image', 'thumbnail', 'banner', 'archived', 'needs-alt-text' ];
 		foreach ( $tags as $name ) {
 			if ( ! term_exists( $name, 'media_tag' ) ) {
@@ -36,7 +32,7 @@ add_action(
 			}
 		}
 
-		update_option( 'mle_dev_seeded', true );
+		update_option( 'mle_dev_seeded_v2', true );
 	},
 	100
 );

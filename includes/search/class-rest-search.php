@@ -70,13 +70,13 @@ class REST_Search {
 		}
 
 		// Filter by taxonomy terms if specified.
-		$media_category = $request->get_param( 'media_category' );
-		if ( $media_category ) {
+		$media_tag = $request->get_param( 'media_tag' );
+		if ( $media_tag ) {
 			$query_args['tax_query'] = [ // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
 				[
-					'taxonomy' => 'media_category',
+					'taxonomy' => 'media_tag',
 					'field'    => 'slug',
-					'terms'    => $media_category,
+					'terms'    => $media_tag,
 				],
 			];
 		}
@@ -158,8 +158,8 @@ class REST_Search {
 				'type'        => 'string',
 				'sanitize_callback' => 'sanitize_mime_type',
 			],
-			'media_category' => [
-				'description' => 'Filter by media category slug.',
+			'media_tag'      => [
+				'description' => 'Filter by media tag slug.',
 				'type'        => 'string',
 				'sanitize_callback' => 'sanitize_text_field',
 			],

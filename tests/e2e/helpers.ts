@@ -4,7 +4,7 @@
  * Provides authenticated REST API requests and WP-CLI execution
  * against the wp-env instance.
  */
-import { APIRequestContext, request } from '@playwright/test';
+import { APIRequestContext, request, type Page } from '@playwright/test';
 import { execSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -56,6 +56,94 @@ export function wpCli( command: string ): string {
 		encoding: 'utf-8',
 		timeout: 30_000,
 	} ).trim();
+}
+
+/**
+ * Log into wp-admin via the browser login form.
+ *
+ * Uses waitForNavigation with 'domcontentloaded' to avoid timeout issues
+ * with wp-admin's full resource loading.
+ */
+export async function loginToAdmin( page: Page ): Promise< void > {
+	await page.goto( `${ BASE_URL }/wp-login.php` );
+	await page.fill( '#user_login', 'admin' );
+	await page.fill( '#user_pass', 'password' );
+	await Promise.all( [
+		page.waitForNavigation( { waitUntil: 'domcontentloaded' } ),
+		page.click( '#wp-submit' ),
+	] );
+}
+
+/**
+ * Navigate to a fresh post editor and dismiss the welcome guide.
+ *
+ * WordPress 6.2+ renders the editor canvas inside an iframe. Block
+ * content locators must target the iframe; toolbar/sidebar locators
+ * target the outer page. Use `editorFrame()` for in-canvas selectors.
+ */
+export async function createNewPost( page: Page ): Promise< void > {
+	await page.goto( `${ BASE_URL }/wp-admin/post-new.php`, {
+		waitUntil: 'domcontentloaded',
+	} );
+	// Dismiss the welcome modal if visible.
+	const welcomeModal = page.locator(
+		'.edit-post-welcome-guide .components-modal__header button'
+	);
+	if (
+		await welcomeModal
+			.isVisible( { timeout: 3_000 } )
+			.catch( () => false )
+	) {
+		await welcomeModal.click();
+	}
+	// Wait for the editor canvas iframe to load.
+	const canvas = editorFrame( page );
+	await canvas.locator( 'body' ).waitFor( { timeout: 15_000 } );
+}
+
+/**
+ * Get the FrameLocator for the editor canvas iframe.
+ *
+ * In WP 6.2+ the block content lives in an iframe within the editor.
+ * Use this for any locator targeting block content. Toolbar and sidebar
+ * locators remain on the outer `page`.
+ */
+export function editorFrame( page: Page ) {
+	return page.frameLocator( 'iframe[name="editor-canvas"]' );
+}
+
+/**
+ * Insert an image block and upload the test fixture.
+ * Returns when the <img> has loaded in the editor canvas.
+ */
+export async function insertImageBlockWithFixture(
+	page: Page
+): Promise< void > {
+	const canvas = editorFrame( page );
+
+	// Click the empty block appender to start typing.
+	const appender = canvas.locator(
+		'.block-editor-default-block-appender__content'
+	);
+	await appender.waitFor( { timeout: 10_000 } );
+	await appender.click();
+
+	// Type /image to trigger the slash command inserter.
+	await page.keyboard.type( '/image' );
+	// The autocomplete menu renders on the outer page.
+	await page
+		.getByRole( 'option', { name: 'Image' } )
+		.first()
+		.click();
+
+	// The file upload input is inside the canvas iframe.
+	const fileInput = canvas.locator(
+		'[data-type="core/image"] .components-form-file-upload input[type="file"]'
+	);
+	await fileInput.setInputFiles( join( __dirname, 'fixtures', 'test-image.jpg' ) );
+	await canvas
+		.locator( '[data-type="core/image"] img[src]' )
+		.waitFor( { timeout: 15_000 } );
 }
 
 const FIXTURE_IMAGE = join( __dirname, 'fixtures', 'test-image.jpg' );

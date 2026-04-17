@@ -2,15 +2,13 @@
 /**
  * Media Taxonomies Registration.
  *
- * Registers `media_category` (hierarchical) and `media_tag` (flat)
- * taxonomies on the `attachment` post type. This gives media items
- * organizational structure — virtual folders via categories, and
- * flexible tagging.
+ * Registers `media_tag` (flat, non-hierarchical) on the `attachment`
+ * post type. Tags-only by design — see planning/BACKGROUND.md for why
+ * we deliberately don't ship hierarchical categories or folders.
  *
- * Follows the community consensus from Trac #47839: use taxonomies
- * (not filesystem folders) for media organization. This approach
- * survives the Phase 3 UI transition since DataViews already supports
- * taxonomy filtering.
+ * The `media_category` taxonomy that earlier scaffolds registered has
+ * been removed; sites with existing data should run
+ * `wp mle taxonomies migrate-categories-to-tags` before upgrading.
  *
  * @package MediaLibraryEnhance\Taxonomies
  */
@@ -23,8 +21,7 @@ class Media_Taxonomies {
 
 	private static ?self $instance = null;
 
-	public const CATEGORY_TAXONOMY = 'media_category';
-	public const TAG_TAXONOMY      = 'media_tag';
+	public const TAG_TAXONOMY = 'media_tag';
 
 	public static function instance(): self {
 		if ( null === self::$instance ) {
@@ -38,31 +35,9 @@ class Media_Taxonomies {
 	}
 
 	/**
-	 * Register media_category and media_tag taxonomies.
+	 * Register the media_tag taxonomy.
 	 */
 	public function register_taxonomies(): void {
-		// Hierarchical taxonomy — behaves like categories / virtual folders.
-		register_taxonomy(
-			self::CATEGORY_TAXONOMY,
-			'attachment',
-			[
-				'labels'            => $this->get_category_labels(),
-				'hierarchical'      => true,
-				'public'            => false,
-				'show_ui'           => true,
-				'show_in_rest'      => true,
-				'show_admin_column' => true,
-				'query_var'         => false,
-				'rewrite'           => false,
-				'capabilities'      => [
-					'manage_terms' => 'upload_files',
-					'edit_terms'   => 'upload_files',
-					'delete_terms' => 'upload_files',
-					'assign_terms' => 'upload_files',
-				],
-			]
-		);
-
 		// Flat taxonomy — behaves like tags for flexible labeling.
 		register_taxonomy(
 			self::TAG_TAXONOMY,
@@ -84,25 +59,6 @@ class Media_Taxonomies {
 				],
 			]
 		);
-	}
-
-	/**
-	 * @return array<string, string>
-	 */
-	private function get_category_labels(): array {
-		return [
-			'name'              => _x( 'Media Categories', 'taxonomy general name', 'media-library-enhance' ),
-			'singular_name'     => _x( 'Media Category', 'taxonomy singular name', 'media-library-enhance' ),
-			'search_items'      => __( 'Search Media Categories', 'media-library-enhance' ),
-			'all_items'         => __( 'All Media Categories', 'media-library-enhance' ),
-			'parent_item'       => __( 'Parent Media Category', 'media-library-enhance' ),
-			'parent_item_colon' => __( 'Parent Media Category:', 'media-library-enhance' ),
-			'edit_item'         => __( 'Edit Media Category', 'media-library-enhance' ),
-			'update_item'       => __( 'Update Media Category', 'media-library-enhance' ),
-			'add_new_item'      => __( 'Add New Media Category', 'media-library-enhance' ),
-			'new_item_name'     => __( 'New Media Category Name', 'media-library-enhance' ),
-			'menu_name'         => __( 'Media Categories', 'media-library-enhance' ),
-		];
 	}
 
 	/**

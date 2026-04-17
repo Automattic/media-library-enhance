@@ -3,7 +3,9 @@
 **Project:** Radical Speed Month - Media Library Improvements
 **Team:** Jacob Smith, Alec Geatches
 **Timeline:** Two weeks (April 22 - May 6, 2026)
-**Last Updated:** April 15, 2026
+**Last Updated:** April 16, 2026
+
+> **Direction revised 2026-04-16:** Pivoted from API-only to **Gutenberg-integrated UI**. Block-editor extensions are React-based and align with Phase 3 — they compound rather than evaporate. See [What Will Survive the Phase 3 Transition](#what-will-survive-the-phase-3-transition).
 
 ---
 
@@ -19,9 +21,11 @@ After two weeks, we'll move the code either into WordPress Core (if it makes arc
 ### Feature Priority Order
 
 1. **Search** - Elasticsearch-powered fast search at scale
-2. **Image Replacement** - Swap out an image everywhere it's used
-3. **Duplicate Detection** - Find and merge duplicate uploads
-4. **Taxonomies** - Categories/tags for media organization
+2. **Tag media in Gutenberg** - Apply tags inline during the editor upload flow
+3. **Duplicate detection on upload** - Warn editors in Gutenberg when uploading a likely duplicate
+4. **Replace image everywhere** - Gutenberg toolbar action that swaps the file across all referencing posts
+
+> **Note:** Earlier drafts split "image replacement" and "taxonomies" as separate features. The pivot to Gutenberg-integrated UX (2026-04-16) merges them: replacement lives on the Image block toolbar, tagging happens during upload, and we narrow taxonomies to **tags only** (no media categories).
 
 ---
 
@@ -51,7 +55,7 @@ Multiple large enterprise WordPress sites have independently raised serious frus
 - No Elasticsearch integration for media queries
 
 **Missing Basic Functionality:**
-- No organizational structure (tags, categories, folders)
+- No way to **tag media during the upload flow** — editors must navigate away from their post to organize media
 - No bulk operations (can't bulk delete, can't assess staleness)
 - Can't track where images are used across posts
 - No duplicate detection or management
@@ -107,11 +111,11 @@ WordPress Core is undertaking a fundamental re-architecture of the Media Library
 | Enterprise Need | Phase 3 Coverage | Status |
 |---|---|---|
 | Search performance at scale | ❌ Not addressed | MySQL queries unchanged |
-| Organizational structure (tags/categories/folders) | 🟡 Barely addressed | Listed as "iteration 2", no active work |
+| **Editor-integrated tagging workflow** | ❌ Not addressed | DataForm enables tagging in the modal, not inline during upload from the post editor |
 | Bulk operations | ❌ Not addressed | Not mentioned |
 | Metadata governance | ❌ Not addressed | DataForm enables editing, not enforcement |
 | Usage tracking ("where is this used?") | 🟡 Spike only | [#66663](https://github.com/WordPress/gutenberg/issues/66663) is investigatory |
-| Duplicate detection | ❌ Not addressed | Not mentioned |
+| Duplicate detection (especially at upload time) | ❌ Not addressed | Not mentioned |
 | DAM capabilities | ❌ Not addressed | Completely out of scope |
 
 **Conclusion:** Phase 3 builds UI plumbing but doesn't solve the enterprise operational problems.
@@ -125,10 +129,11 @@ Critical strategic insight: Core is replacing the entire Backbone.js media modal
 ### ✅ WILL Survive Phase 3
 
 - **Backend/SQL query fixes** - Elasticsearch integration, query optimization
-- **Data model additions** - Categories/tags as taxonomies on `attachment` post type
+- **Data model additions** - Tags as a taxonomy on `attachment` post type
 - **REST API enhancements** - New endpoints, search parameters
 - **WP-CLI commands** - Bulk operations, monitoring, management
-- **Plugin-level solutions** - Independent of UI layer
+- **Gutenberg block-editor extensions** - InspectorControls, BlockControls, PluginDocumentSettingPanel, MediaUpload integrations
+- **Plugin-level solutions** - Independent of the legacy modal layer
 
 ### ❌ Will NOT Survive Phase 3
 
@@ -136,7 +141,9 @@ Critical strategic insight: Core is replacing the entire Backbone.js media modal
 - **PHP hooks into old modal** - `attachment_fields_to_edit` needs remapping
 - **Old modal layout/UX changes** - All throwaway work
 
-**Strategy:** Focus on backend-first, API-first solutions that will survive the UI transition.
+> **Important distinction:** Gutenberg block-editor extensions are **not** the same as Backbone media modal customizations. The block editor is already React; Phase 3 is rebuilding the modal to look more like it. Investments in editor extensions compound rather than evaporate — that's where editors actually work.
+
+**Strategy:** Focus on backend, API, CLI, **AND Gutenberg block-editor extensions** — all four survive Phase 3. Avoid only the legacy `wp.media` Backbone modal.
 
 ---
 
@@ -188,22 +195,28 @@ A large news publisher successfully implemented Elasticsearch-powered media sear
 - Fall back to native WordPress if ES unavailable
 - Batch index attachments (newest → oldest for immediate editor value)
 
-### Organizational Structure: Taxonomies vs. Folders
+### Tagging Strategy: Tags Only, Applied in the Editor
 
-**Community Consensus from [Trac #47839](https://core.trac.wordpress.org/ticket/47839):**
-- Virtual folders via **hierarchical taxonomies** on the `attachment` post type
-- Don't move files on disk, create organizational structure in database
-- One image can appear in multiple "folders" (taxonomy terms)
+**Decision:** One taxonomy — `media_tag` (flat, non-hierarchical). No categories, no folders.
 
-**Why This Works:**
-- DataViews (Phase 3's new UI) already supports taxonomy filtering
-- Taxonomies are a solved problem in WordPress
-- Survives the Phase 3 UI transition
-- Enables both hierarchical folders AND flat tags
+**Why tags-only:**
+- Simpler mental model for editors (no folder-vs-tag confusion)
+- Phase 3 DataViews already supports tag filtering — same mechanic, less surface area
+- Matches editor workflow: tag-as-you-go during the upload flow rather than file-it-then-find-it later
+- Hierarchical categories on attachments add complexity that nobody asked for in customer interviews
 
-**Prior Art:**
-- Gutenberg POC: [#53788](https://github.com/WordPress/gutenberg/pull/53788) (built at meetup, never merged)
-- Third-party plugins: Media Library Categories (20K+ installs), FileBird (100K+ installs)
+**Why apply tags from Gutenberg, not the Media Library admin:**
+- Editors live in the post editor — making them navigate to Media → edit attachment → set terms → return is friction
+- Gutenberg's `FormTokenField` + `core-data` selectors provide tagging UI for free
+- Tags persist on the attachment, not the block — same image used in another post inherits the tags
+
+**What we're explicitly NOT building:**
+- Hierarchical categories on attachments (FileBird-style folders)
+- A separate "media tagging" admin screen (the editor IS the screen)
+
+**Prior art (for reference, not for emulation):**
+- Gutenberg POC: [#53788](https://github.com/WordPress/gutenberg/pull/53788) (built at meetup, never merged) — proposed both categories and tags
+- Third-party plugins: Media Library Categories (20K+ installs), FileBird (100K+ installs) — both popular but folder-centric, not editor-integrated
 
 ### Image Replacement: Multi-Parent Attachments
 
@@ -232,6 +245,13 @@ A large news publisher successfully implemented Elasticsearch-powered media sear
 
 **For Two-Week Sprint:** Postmeta-based approach is fastest to implement and validate.
 
+**Gutenberg integration:**
+- Replace action lives in the Image block toolbar (`BlockControls` → `ToolbarButton`)
+- Click → modal with impact summary ("used in N posts") fetched from `GET /mle/v1/usage/{id}`
+- Confirm → `MediaUpload` widget for the new file → `POST /mle/v1/replace/{id}`
+- Result: file swapped across all referencing posts, attachment ID and URL preserved
+- Permission gated to `edit_others_posts`
+
 ### Duplicate Detection
 
 **Detection Strategies:**
@@ -247,6 +267,15 @@ A large news publisher successfully implemented Elasticsearch-powered media sear
 **Prior Art:**
 - Media Deduplicator plugin (30K installs)
 - Duplicate Media Finder (proof of concept)
+
+**Editor-surfaced duplicates (the new direction):**
+- File hash is computed automatically on upload (existing `Hash_Generator::hash_on_upload`)
+- New endpoint: `GET /mle/v1/duplicates/check-on-upload?attachment_id={id}` — returns exact + similar matches with the just-uploaded ID excluded
+- Gutenberg subscribes to `core/block-editor` for new image inserts; on duplicate found, dispatches a `core/notices` Notice
+- Notice actions: **Use the existing one** (replaces block reference + deletes the duplicate upload), **Keep both** (dismiss), **Compare** (side-by-side modal)
+- Visual similarity (perceptual hash) surfaces with weaker copy: *"Similar image found…"*
+- Threshold configurable: `apply_filters('mle_duplicate_warning_threshold', 0)` — default surfaces only exact matches
+- Bulk uploads consolidate into one Notice listing all duplicates
 
 ---
 
@@ -274,26 +303,27 @@ A large news publisher successfully implemented Elasticsearch-powered media sear
 ## Two-Week Sprint Approach
 
 ### Week 1: Search + Foundation
-- Day 1-2: Plugin scaffold, REST API endpoints, Elasticsearch routing
-- Day 3-4: Media modal integration, fallback behavior
-- Day 5: Basic taxonomy registration (categories/tags for attachments)
+- Day 1-2: Plugin scaffold, REST API endpoints, Elasticsearch routing *(✅ done)*
+- Day 3: `media_tag` taxonomy registration + REST exposure *(✅ done — `media_category` to be removed)*
+- Day 4-5: `@wordpress/scripts` build pipeline + first Gutenberg panel (tags via InspectorControls + FormTokenField)
 
-### Week 2: Image Replacement + Duplicates
-- Day 6-7: Usage tracking (postmeta approach), WP-CLI rebuild command
-- Day 8-9: Replace image functionality, batch operations
-- Day 10: Duplicate detection (file hash approach), admin UI
+### Week 2: Replacement + Duplicates in the editor
+- Day 6-7: Usage tracking *(✅ done)* + Replace-Everywhere toolbar button + impact-summary modal in Gutenberg
+- Day 8-9: `check-on-upload` REST endpoint + Gutenberg Notice integration for duplicate warnings
+- Day 10: Polish, E2E coverage of editor flows, removal of `media_category` (with migration CLI)
 
 ### Scrappy = Fast
-- No fancy Dashboard UI (WP-CLI and REST API focused)
+- No standalone admin UI beyond the read-only status dashboard at Tools → Media Library Enhance
+- Lean on Gutenberg's built-in components — `FormTokenField`, `Notice`, `Modal`, `MediaUpload`, `ToolbarButton` — instead of building custom
 - No comprehensive conflict detection (document known incompatible plugins)
-- Lean on existing WordPress admin interfaces
 - Focus on proving the technical approach works
 
 ### Success Criteria
 - Search response time < 2 seconds on test site with 1M+ images
-- Can replace an image across all posts where it's used
-- Can detect exact duplicate uploads
-- Can organize media with categories/tags
+- **Editors can tag media without leaving the post editor**
+- Can replace an image across all posts where it's used, triggered from the Gutenberg toolbar
+- **Duplicate uploads are surfaced in the editor before they pollute the library**
+- All UI investment is in surfaces that survive Phase 3 (Gutenberg block extensions, not Backbone)
 - Working code that demonstrates feasibility for Core adoption
 
 ---
@@ -327,5 +357,5 @@ A large news publisher successfully implemented Elasticsearch-powered media sear
 
 ---
 
-**Last Updated:** April 15, 2026
+**Last Updated:** April 16, 2026
 **Next Review:** After two-week sprint (May 6, 2026)

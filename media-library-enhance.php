@@ -65,6 +65,9 @@ function bootstrap(): void {
 	Duplicates\Duplicate_Finder::instance()->register();
 	Duplicates\REST_Duplicates::instance()->register();
 
+	Admin\Status_Page::instance()->register();
+	Admin\Editor_Assets::instance()->register();
+
 	// WP-CLI commands (only in CLI context).
 	if ( defined( 'WP_CLI' ) && WP_CLI ) {
 		CLI\Search_Command::register_command();
