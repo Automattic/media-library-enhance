@@ -15,7 +15,7 @@
 		"vip:cli": "vip dev-env exec --slug=mle-dev -- wp",
 		"lint:php": "composer lint",
 		"lint:php:fix": "composer lint:fix",
-		"test:unit": "wp-env run tests-cli --env-cwd=wp-content/plugins/feat-planningbackgroundmd-scaffold-wordpress-6us -- bash -c 'WP_TESTS_DIR=/wordpress-phpunit vendor/bin/phpunit'",
+		"test:unit": "wp-env run tests-cli --env-cwd=wp-content/plugins/media-library-enhance -- bash -c 'WP_TESTS_DIR=/wordpress-phpunit vendor/bin/phpunit'",
 		"test:e2e": "playwright test",
 		"test:e2e:ui": "playwright test --ui",
 		"test": "npm run test:unit && npm run test:e2e"

@@ -61,8 +61,8 @@ class Elasticsearch_Query {
 		// This intentionally modifies non-main queries (media library searches).
 		$query->set( 'es', true ); // phpcs:ignore WordPressVIPMinimum.Hooks.PreGetPosts.PreGetPosts
 
-		// Performance: skip SQL_CALC_FOUND_ROWS — use count query instead.
-		$query->set( 'no_found_rows', false ); // phpcs:ignore WordPressVIPMinimum.Hooks.PreGetPosts.PreGetPosts
+		// Performance: skip SQL_CALC_FOUND_ROWS for this search query.
+		$query->set( 'no_found_rows', true ); // phpcs:ignore WordPressVIPMinimum.Hooks.PreGetPosts.PreGetPosts
 
 		/**
 		 * Fires when a media query is routed to Elasticsearch.

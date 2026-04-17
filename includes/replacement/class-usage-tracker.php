@@ -158,8 +158,15 @@ class Usage_Tracker {
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$results = $wpdb->get_col(
 			$wpdb->prepare(
-				"SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = %s AND meta_value LIKE %s",
+				"SELECT post_id
+				FROM {$wpdb->postmeta}
+				WHERE meta_key = %s
+				AND (
+					meta_value LIKE %s
+					OR meta_value LIKE %s
+				)",
 				self::META_KEY,
+				'%' . $wpdb->esc_like( 'i:' . $post_id . ';' ) . '%',
 				'%' . $wpdb->esc_like( '"' . $post_id . '"' ) . '%'
 			)
 		);

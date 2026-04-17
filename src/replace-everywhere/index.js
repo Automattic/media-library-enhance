@@ -20,7 +20,7 @@ import {
 	Spinner,
 	Notice,
 } from '@wordpress/components';
-import { useState, useRef, Fragment } from '@wordpress/element';
+import { useState, useRef, Fragment, useEffect } from '@wordpress/element';
 import { useDispatch, useSelect } from '@wordpress/data';
 import { __, sprintf, _n } from '@wordpress/i18n';
 import { createHigherOrderComponent } from '@wordpress/compose';
@@ -35,12 +35,24 @@ function ReplaceEverywhereModal( { attachmentId, onClose, onReplaced } ) {
 	const [ uploadError, setUploadError ] = useState( null );
 	const fileInputRef = useRef( null );
 
-	// Fetch usage on first render.
-	if ( usage === null && usageError === null ) {
+	useEffect( () => {
+		let mounted = true;
 		apiFetch( { path: `/mle/v1/usage/${ attachmentId }` } )
-			.then( ( data ) => setUsage( data ) )
-			.catch( ( err ) => setUsageError( err ) );
-	}
+			.then( ( data ) => {
+				if ( mounted ) {
+					setUsage( data );
+				}
+			} )
+			.catch( ( err ) => {
+				if ( mounted ) {
+					setUsageError( err );
+				}
+			} );
+
+		return () => {
+			mounted = false;
+		};
+	}, [ attachmentId ] );
 
 	const onPickFile = () => {
 		fileInputRef.current?.click();
