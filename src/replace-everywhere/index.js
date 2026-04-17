@@ -36,21 +36,22 @@ function ReplaceEverywhereModal( { attachmentId, onClose, onReplaced } ) {
 	const fileInputRef = useRef( null );
 
 	useEffect( () => {
-		let mounted = true;
-		apiFetch( { path: `/mle/v1/usage/${ attachmentId }` } )
+		const controller = new AbortController();
+		apiFetch( {
+			path: `/mle/v1/usage/${ attachmentId }`,
+			signal: controller.signal,
+		} )
 			.then( ( data ) => {
-				if ( mounted ) {
-					setUsage( data );
-				}
+				setUsage( data );
 			} )
 			.catch( ( err ) => {
-				if ( mounted ) {
+				if ( err?.name !== 'AbortError' ) {
 					setUsageError( err );
 				}
 			} );
 
 		return () => {
-			mounted = false;
+			controller.abort();
 		};
 	}, [ attachmentId ] );
 

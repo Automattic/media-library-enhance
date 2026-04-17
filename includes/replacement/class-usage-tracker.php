@@ -161,13 +161,9 @@ class Usage_Tracker {
 				"SELECT post_id
 				FROM {$wpdb->postmeta}
 				WHERE meta_key = %s
-				AND (
-					meta_value LIKE %s
-					OR meta_value LIKE %s
-				)",
+				AND meta_value LIKE %s",
 				self::META_KEY,
-				'%' . $wpdb->esc_like( 'i:' . $post_id . ';' ) . '%',
-				'%' . $wpdb->esc_like( '"' . $post_id . '"' ) . '%'
+				'%' . $wpdb->esc_like( 'i:' . $post_id . ';' ) . '%'
 			)
 		);
 

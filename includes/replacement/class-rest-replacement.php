@@ -129,6 +129,6 @@ class REST_Replacement {
 		if ( $attachment_id <= 0 ) {
 			return false;
 		}
-		return current_user_can( 'edit_post', $attachment_id );
+		return current_user_can( 'edit_others_posts' ) && current_user_can( 'edit_post', $attachment_id );
 	}
 }
