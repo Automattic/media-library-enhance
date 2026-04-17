@@ -61,7 +61,9 @@ class Elasticsearch_Query {
 		// This intentionally modifies non-main queries (media library searches).
 		$query->set( 'es', true ); // phpcs:ignore WordPressVIPMinimum.Hooks.PreGetPosts.PreGetPosts
 
-		// Performance: skip SQL_CALC_FOUND_ROWS — use count query instead.
+		// Keep found_rows enabled because REST_Search exposes pagination totals.
+		// This keeps MySQL fallback queries accurate at the cost of found_rows work.
+		// On ES-routed queries, totals come from the search backend instead.
 		$query->set( 'no_found_rows', false ); // phpcs:ignore WordPressVIPMinimum.Hooks.PreGetPosts.PreGetPosts
 
 		/**

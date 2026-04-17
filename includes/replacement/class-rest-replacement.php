@@ -124,7 +124,11 @@ class REST_Replacement {
 		return current_user_can( 'upload_files' );
 	}
 
-	public function check_edit_permissions(): bool {
-		return current_user_can( 'edit_others_posts' );
+	public function check_edit_permissions( \WP_REST_Request $request ): bool {
+		$attachment_id = (int) $request->get_param( 'id' );
+		if ( $attachment_id <= 0 ) {
+			return false;
+		}
+		return current_user_can( 'edit_others_posts' ) && current_user_can( 'edit_post', $attachment_id );
 	}
 }
