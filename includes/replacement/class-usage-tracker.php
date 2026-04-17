@@ -170,7 +170,12 @@ class Usage_Tracker {
 		$results = [];
 		foreach ( $rows as $row ) {
 			$used_in_posts = maybe_unserialize( $row->meta_value );
-			if ( is_array( $used_in_posts ) && in_array( $post_id, wp_parse_id_list( $used_in_posts ), true ) ) {
+			if ( ! is_array( $used_in_posts ) ) {
+				continue;
+			}
+
+			$used_in_posts = wp_parse_id_list( $used_in_posts );
+			if ( in_array( $post_id, $used_in_posts, true ) ) {
 				$results[] = (int) $row->post_id;
 			}
 		}
