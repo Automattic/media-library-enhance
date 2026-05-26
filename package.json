@@ -5,6 +5,7 @@
 	"scripts": {
 		"build": "wp-scripts build",
 		"start": "wp-scripts start",
+		"dev": "wp-env start && wp-scripts start",
 		"wp-env:start": "wp-env start",
 		"wp-env:stop": "wp-env stop",
 		"wp-env:cli": "wp-env run cli",
